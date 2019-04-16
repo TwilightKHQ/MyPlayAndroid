@@ -8,6 +8,8 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.myplayandroid.Class.Item;
+
 import java.util.List;
 
 /**
@@ -24,7 +26,7 @@ public class AdapterItem extends ArrayAdapter<Item> {
     }
 
     @Override
-    public View getView(int position, View converView, ViewGroup parent) {
+    public View getView(int position, View coverView, ViewGroup parent) {
         Item item = getItem(position);
         View view = LayoutInflater.from(getContext()).inflate(resourceId, parent, false);
         ImageView itemImage = (ImageView) view.findViewById(R.id.item_image);

@@ -1,4 +1,4 @@
-package com.example.myplayandroid;
+package com.example.myplayandroid.Class;
 
 /**
  * Created by zhongzhiqiang on 19-4-3.

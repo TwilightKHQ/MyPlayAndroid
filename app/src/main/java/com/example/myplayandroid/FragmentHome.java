@@ -18,6 +18,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.example.myplayandroid.Bean.MessageBean;
+import com.example.myplayandroid.Class.Message;
+import com.example.myplayandroid.Util.HttpUtil;
 import com.google.gson.Gson;
 
 import java.io.IOException;

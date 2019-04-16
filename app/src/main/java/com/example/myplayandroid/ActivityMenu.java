@@ -1,25 +1,46 @@
 package com.example.myplayandroid;
 
+import android.app.Activity;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.example.myplayandroid.Bean.UpdateBean;
+import com.example.myplayandroid.Class.Item;
+import com.example.myplayandroid.Util.HttpUtil;
+import com.example.myplayandroid.Util.Utils;
+import com.google.gson.Gson;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
+
 
 public class ActivityMenu extends AppCompatActivity {
 
     private List<Item> itemList = new ArrayList<>();
+    private List<Item> mItemList;
 
     private AdapterSetting adapterSetting = new AdapterSetting(itemList);
 
-    private String version;
+    public String versionName;
+
+    public int versionCode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,12 +48,13 @@ public class ActivityMenu extends AppCompatActivity {
         setContentView(R.layout.activity_menu);
 
         TextView textView = (TextView) findViewById(R.id.menu_text);
-        //获取PackageManager的实例
+        //获取PackageManager的实例 获取当前的版本名
         PackageManager packageManager = getPackageManager();
         try {
             //getPackageName()是你当前类的包名，0代表是获取版本信息
             PackageInfo packInfo = packageManager.getPackageInfo(getPackageName(), 0);
-            version =  packInfo.versionName;
+            versionName =  packInfo.versionName;
+            versionCode = packInfo.versionCode;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -43,14 +65,32 @@ public class ActivityMenu extends AppCompatActivity {
         initItems();
 
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.menu_recycle_view);
+//        CardView cardView = (CardView) findViewById(R.id.card_view);
         GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 1);
         recyclerView.setLayoutManager(gridLayoutManager);
         recyclerView.setAdapter(adapterSetting);
+        View view = LayoutInflater.from(ContextApplication.getContext()).inflate(R.layout.item_setting, null);
+        final AdapterSetting.ViewHolder viewHolder = new AdapterSetting.ViewHolder(view);
+        viewHolder.cardView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                int position = viewHolder.getAdapterPosition();
+                Item item = mItemList.get(position);
+                if (item.getName().equals("检查更新")) {
+                    getMessage("https://raw.githubusercontent.com/twilightkhq/MyPlayAndroid/master/Json/info_version.json");
+
+                    Log.d("Test", "onClick: " + versionCode + ' ' + ' '  );
+//                    if ( latestCode > versionCode) {
+//                        Toast.makeText(ContextApplication.getContext(), "检测到更新", Toast.LENGTH_SHORT).show();
+//                    }
+                }
+            }
+        });
     }
 
     private void initItems() {
         itemList.clear();
-        Item item0 = new Item("当前版本号:" + version, R.mipmap.information);
+        Item item0 = new Item("当前版本号: " + versionName, R.mipmap.information);
         itemList.add(item0);
         Item item1 = new Item("检查更新", R.mipmap.update);
         itemList.add(item1);
@@ -71,18 +111,39 @@ public class ActivityMenu extends AppCompatActivity {
         }
     }
 
+    //初始化页面 发送网络请求
+    private void getMessage(final String url) {
 
-//    /*
-//     * 获取当前程序的版本名
-//     */
-//    private String getVersionName() throws Exception{
-//        //获取packagemanager的实例
-//        PackageManager packageManager = getPackageManager();
-//        //getPackageName()是你当前类的包名，0代表是获取版本信息
-//        PackageInfo packInfo = packageManager.getPackageInfo(getPackageName(), 0);
-//        Log.e("TAG","版本号:" + packInfo.versionCode);
-//        Log.e("TAG","版本名:" + packInfo.versionName);
-//        return packInfo.versionName;
-//    }
+        HttpUtil.sendOkHttpRequest(url, new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                //处理异常情况
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                //得到服务器的具体返回内容
+                final String  responseData = response.body().string();
+                //解析最新版本信息
+                Gson gson = new Gson();
+                UpdateBean updateBean = gson.fromJson(responseData, UpdateBean.class);
+                final int latestCode = updateBean.getVersionCode();
+                final String latestName = updateBean.getVersionName();
+                versionCode = Utils.getVersionCode(ContextApplication.getContext());
+                ShowCompare(latestCode);
+            }
+        });
+    }
+
+    private void ShowCompare(final int Code) {
+        if (Code > versionCode){
+            new Activity().runOnUiThread(new Runnable() {
+                @Override
+                public void run(){
+                    Toast.makeText(ContextApplication.getContext(), "检测到更新", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+    }
 
 }

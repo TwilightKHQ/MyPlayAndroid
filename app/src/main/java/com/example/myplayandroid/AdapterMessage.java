@@ -11,6 +11,8 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.myplayandroid.Class.Message;
+
 import java.util.List;
 
 /**
@@ -20,7 +22,6 @@ import java.util.List;
 public class AdapterMessage extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private List<Message> messageList;// 数据源
-    private AdapterMessage messageAdapter = null;
 
     private int normalType = 0;// 第一种ViewType，正常的item
     private int footType = 1;// 第二种ViewType，底部的提示View
@@ -69,9 +70,9 @@ public class AdapterMessage extends RecyclerView.Adapter<RecyclerView.ViewHolder
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         // 根据返回的ViewType，绑定不同的布局文件
         if (viewType == normalType) {
-            return new NormalHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message, null));
+            return new NormalHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message, parent, false));
         } else {
-            return new FootHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.footview, null));
+            return new FootHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.footview, parent, false));
         }
     }
 

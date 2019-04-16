@@ -16,4 +16,6 @@
 
     <string name="url_ArticleList">https://www.wanandroid.com/article/list/0/json</string>
 
+    <string name="update_info">https://raw.githubusercontent.com/twilightkhq/MyPlayAndroid/master/Json/info_version.json</string>
+
 </resources>

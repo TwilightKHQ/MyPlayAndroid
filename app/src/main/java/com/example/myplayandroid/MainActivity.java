@@ -24,6 +24,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.myplayandroid.Class.Item;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
