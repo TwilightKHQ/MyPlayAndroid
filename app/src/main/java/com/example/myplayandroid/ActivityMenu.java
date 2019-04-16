@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
@@ -69,21 +71,18 @@ public class ActivityMenu extends AppCompatActivity {
         GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 1);
         recyclerView.setLayoutManager(gridLayoutManager);
         recyclerView.setAdapter(adapterSetting);
-        View view = LayoutInflater.from(ContextApplication.getContext()).inflate(R.layout.item_setting, null);
-        final AdapterSetting.ViewHolder viewHolder = new AdapterSetting.ViewHolder(view);
-        viewHolder.cardView.setOnClickListener(new View.OnClickListener() {
+        //设置RecyclerView的点击事件
+        adapterSetting.setOnItemClickListener(new AdapterSetting.OnItemClickListener() {
             @Override
-            public void onClick(View view) {
-                int position = viewHolder.getAdapterPosition();
-                Item item = mItemList.get(position);
-                if (item.getName().equals("检查更新")) {
-                    getMessage("https://raw.githubusercontent.com/twilightkhq/MyPlayAndroid/master/Json/info_version.json");
-
-                    Log.d("Test", "onClick: " + versionCode + ' ' + ' '  );
-//                    if ( latestCode > versionCode) {
-//                        Toast.makeText(ContextApplication.getContext(), "检测到更新", Toast.LENGTH_SHORT).show();
-//                    }
+            public void onItemClick(View view, int position) {
+                if (position == 1){
+                    getUpdateInfo("https://raw.githubusercontent.com/twilightkhq/MyPlayAndroid/master/Json/info_version.json");
                 }
+            }
+
+            @Override
+            public void onItemLongClick(View view, int position) {
+
             }
         });
     }
@@ -112,7 +111,7 @@ public class ActivityMenu extends AppCompatActivity {
     }
 
     //初始化页面 发送网络请求
-    private void getMessage(final String url) {
+    private void getUpdateInfo(String url) {
 
         HttpUtil.sendOkHttpRequest(url, new Callback() {
             @Override
@@ -137,13 +136,21 @@ public class ActivityMenu extends AppCompatActivity {
 
     private void ShowCompare(final int Code) {
         if (Code > versionCode){
-            new Activity().runOnUiThread(new Runnable() {
-                @Override
-                public void run(){
-                    Toast.makeText(ContextApplication.getContext(), "检测到更新", Toast.LENGTH_SHORT).show();
-                }
-            });
+           handler.sendEmptyMessage(0x1);
         }
     }
+
+    //通过Handler来处理异步消息
+    private Handler handler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what){
+                case 0x1:
+                    Toast.makeText(ContextApplication.getContext(), "检测到更新", Toast.LENGTH_SHORT).show();
+                    break;
+            }
+        }
+    };
+
 
 }

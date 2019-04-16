@@ -3,6 +3,7 @@ package com.example.myplayandroid.Adapter;
 import android.app.Activity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,6 +37,12 @@ public class AdapterSetting extends RecyclerView.Adapter<AdapterSetting.ViewHold
 
     private int versionCode;
 
+    private OnItemClickListener listener; //设置RecyclerView的点击事件
+
+    public void setOnItemClickListener(AdapterSetting.OnItemClickListener onItemClickListener){
+        this.listener = onItemClickListener;
+    }
+
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         CardView cardView;
@@ -62,16 +69,11 @@ public class AdapterSetting extends RecyclerView.Adapter<AdapterSetting.ViewHold
         viewHolder.cardView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                int position = viewHolder.getAdapterPosition();
-//                Item item = mItemList.get(position);
-//                if (item.getName().equals("检查更新")) {
-//                    getMessage("https://raw.githubusercontent.com/twilightkhq/MyPlayAndroid/master/Json/info_version.json");
-//
-//                    Log.d("Test", "onClick: " + versionCode + ' ' + ' '  );
-////                    if ( latestCode > versionCode) {
-////                        Toast.makeText(ContextApplication.getContext(), "检测到更新", Toast.LENGTH_SHORT).show();
-////                    }
-//                }
+                int position = viewHolder.getAdapterPosition();
+                Item item = mItemList.get(position);
+                if (listener != null) {
+                    listener.onItemClick(view, position);
+                }
             }
         });
 
@@ -115,13 +117,14 @@ public class AdapterSetting extends RecyclerView.Adapter<AdapterSetting.ViewHold
     }
 
     private void ShowCompare(final int Code) {
-        if (Code > versionCode){
-            new Activity().runOnUiThread(new Runnable() {
-                @Override
-                public void run(){
-                    Toast.makeText(ContextApplication.getContext(), "检测到更新", Toast.LENGTH_SHORT).show();
-                }
-            });
+        if (Code > versionCode) {
+            Toast.makeText(ContextApplication.getContext(), "检测到更新", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    //自己设计点击事件接口
+    public interface OnItemClickListener {
+        void onItemClick(View view, int position);
+        void onItemLongClick(View view, int position);
     }
 }
