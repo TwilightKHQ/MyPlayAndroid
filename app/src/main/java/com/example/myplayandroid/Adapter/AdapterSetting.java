@@ -1,9 +1,7 @@
 package com.example.myplayandroid.Adapter;
 
-import android.app.Activity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -66,6 +64,7 @@ public class AdapterSetting extends RecyclerView.Adapter<AdapterSetting.ViewHold
 
         View view = LayoutInflater.from(ContextApplication.getContext()).inflate(R.layout.item_setting, parent, false);
         final ViewHolder viewHolder = new ViewHolder(view);
+        //自己设置点击事件
         viewHolder.cardView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -109,7 +108,6 @@ public class AdapterSetting extends RecyclerView.Adapter<AdapterSetting.ViewHold
                 Gson gson = new Gson();
                 UpdateBean updateBean = gson.fromJson(responseData, UpdateBean.class);
                 final int latestCode = updateBean.getVersionCode();
-                final String latestName = updateBean.getVersionName();
                 versionCode = Utils.getVersionCode(ContextApplication.getContext());
                 ShowCompare(latestCode);
             }

@@ -18,4 +18,6 @@
 
     <string name="update_info">https://raw.githubusercontent.com/twilightkhq/MyPlayAndroid/master/Json/info_version.json</string>
 
+    <string name="download_apk">https://github.com/TwilightKHQ/MyPlayAndroid/releases/download/1.0/app-release.apk</string>
+
 </resources>
