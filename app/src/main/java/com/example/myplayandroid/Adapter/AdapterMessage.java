@@ -1,4 +1,4 @@
-package com.example.myplayandroid;
+package com.example.myplayandroid.Adapter;
 
 import android.content.Context;
 import android.content.Intent;
@@ -11,7 +11,9 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.myplayandroid.ActivityWebPage;
 import com.example.myplayandroid.Class.Message;
+import com.example.myplayandroid.R;
 
 import java.util.List;
 

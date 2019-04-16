@@ -1,4 +1,4 @@
-package com.example.myplayandroid;
+package com.example.myplayandroid.Adapter;
 
 import android.content.Context;
 import android.support.v4.app.Fragment;

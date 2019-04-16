@@ -1,4 +1,4 @@
-package com.example.myplayandroid;
+package com.example.myplayandroid.Fragment;
 
 /**
  * Created by zhongzhiqiang on 19-4-8.
@@ -21,6 +21,8 @@ import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
+import com.example.myplayandroid.ContextApplication;
+import com.example.myplayandroid.R;
 
 import java.util.ArrayList;
 import java.util.List;

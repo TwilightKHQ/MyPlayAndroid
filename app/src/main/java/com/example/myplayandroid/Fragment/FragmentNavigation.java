@@ -1,4 +1,4 @@
-package com.example.myplayandroid;
+package com.example.myplayandroid.Fragment;
 
 /**
  * Created by zhongzhiqiang on 19-4-8.
@@ -12,16 +12,18 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
 
-public class FragmentProject extends Fragment {
+import com.example.myplayandroid.R;
+
+public class FragmentNavigation extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_project, container, false);
+        View view = inflater.inflate(R.layout.fragment_navigation, container, false);
         Button bt = (Button) view.findViewById(R.id.bt);
         bt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getActivity(), "Fragment3上的按钮被点击了", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), "Fragment4上的按钮被点击了", Toast.LENGTH_SHORT).show();
             }
         });
         return view;

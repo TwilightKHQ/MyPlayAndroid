@@ -24,7 +24,13 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.myplayandroid.Adapter.AdapterFragment;
+import com.example.myplayandroid.Adapter.AdapterItem;
 import com.example.myplayandroid.Class.Item;
+import com.example.myplayandroid.Fragment.FragmentHome;
+import com.example.myplayandroid.Fragment.FragmentKnow;
+import com.example.myplayandroid.Fragment.FragmentNavigation;
+import com.example.myplayandroid.Fragment.FragmentProject;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;

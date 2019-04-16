@@ -1,13 +1,8 @@
-package com.example.myplayandroid;
+package com.example.myplayandroid.Adapter;
 
 import android.app.Activity;
-import android.content.Context;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.os.Looper;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +13,8 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.example.myplayandroid.Bean.UpdateBean;
 import com.example.myplayandroid.Class.Item;
+import com.example.myplayandroid.ContextApplication;
+import com.example.myplayandroid.R;
 import com.example.myplayandroid.Util.HttpUtil;
 import com.example.myplayandroid.Util.Utils;
 import com.google.gson.Gson;
@@ -28,7 +25,6 @@ import java.util.List;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
-import okhttp3.internal.Util;
 
 /**
  * Created by zhongzhiqiang on 19-4-15.

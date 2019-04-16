@@ -1,4 +1,4 @@
-package com.example.myplayandroid;
+package com.example.myplayandroid.Adapter;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -9,6 +9,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.myplayandroid.Class.Item;
+import com.example.myplayandroid.R;
 
 import java.util.List;
 
