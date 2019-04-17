@@ -3,18 +3,25 @@ package com.example.myplayandroid;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,6 +43,8 @@ import okhttp3.Response;
 
 
 public class ActivityMenu extends AppCompatActivity {
+
+    private String TAG = "Test";
 
     private List<Item> itemList = new ArrayList<>();
 
@@ -88,7 +97,6 @@ public class ActivityMenu extends AppCompatActivity {
                         AlertDialog.Builder dialog = new AlertDialog.Builder(ActivityMenu.this);
                         dialog.setTitle("版本更新");
                         dialog.setMessage("即将开始下载最新版本安装包");
-
                         dialog.setCancelable(true);
                         dialog.setPositiveButton("确认", new DialogInterface.OnClickListener() {
                             @Override
@@ -147,6 +155,10 @@ public class ActivityMenu extends AppCompatActivity {
             //下载成功时将前台服务通知关闭，
             Toast.makeText(ActivityMenu.this, "Download Success", Toast.LENGTH_SHORT).show();
             progressDialog.cancel();
+            String downloadUrl = getString(R.string.download_apk);
+            String filename = downloadUrl.substring(downloadUrl.lastIndexOf("/"));
+            String directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + filename;
+            install(directory);
         }
 
         @Override
@@ -224,7 +236,7 @@ public class ActivityMenu extends AppCompatActivity {
         }
     }
 
-    //初始化页面 发送网络请求
+    //发送网络请求
     private void getUpdateInfo(String url) {
 
         HttpUtil.sendOkHttpRequest(url, new Callback() {
@@ -241,7 +253,6 @@ public class ActivityMenu extends AppCompatActivity {
                 Gson gson = new Gson();
                 UpdateBean updateBean = gson.fromJson(responseData, UpdateBean.class);
                 final int latestCode = updateBean.getVersionCode();
-                final String latestName = updateBean.getVersionName();
                 versionCode = Utils.getVersionCode(ContextApplication.getContext());
                 ShowCompare(latestCode);
             }
@@ -265,5 +276,25 @@ public class ActivityMenu extends AppCompatActivity {
             }
         }
     };
+
+    private void install(String filePath) {
+        Log.i(TAG, "开始执行安装: " + filePath);
+        File apkFile = new File(filePath);
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            Log.w(TAG, "版本大于 N ，开始使用 fileProvider 进行安装");
+            intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            Uri contentUri = FileProvider.getUriForFile(
+                    ContextApplication.getContext()
+                    , "com.example.myplayandroid.fileprovider"
+                    , apkFile);
+            intent.setDataAndType(contentUri, "application/vnd.android.package-archive");
+        } else {
+            Log.w(TAG, "正常进行安装");
+            intent.setDataAndType(Uri.fromFile(apkFile), "application/vnd.android.package-archive");
+        }
+        startActivity(intent);
+    }
 
 }
