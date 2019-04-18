@@ -1,12 +1,10 @@
 package com.example.myplayandroid;
 
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -21,7 +19,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
+
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,6 +27,7 @@ import com.example.myplayandroid.Adapter.AdapterSetting;
 import com.example.myplayandroid.Bean.UpdateBean;
 import com.example.myplayandroid.Class.Item;
 import com.example.myplayandroid.Util.HttpUtil;
+import com.example.myplayandroid.Util.MyProgressBarDialog;
 import com.example.myplayandroid.Util.Utils;
 import com.google.gson.Gson;
 
@@ -39,7 +38,11 @@ import java.util.List;
 
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import okhttp3.Response;
+
+import static com.example.myplayandroid.ContextApplication.getContext;
 
 
 public class ActivityMenu extends AppCompatActivity {
@@ -50,13 +53,17 @@ public class ActivityMenu extends AppCompatActivity {
 
     private DownloadTask downloadTask;
 
-    private ProgressDialog progressDialog;
+    private MyProgressBarDialog myDialog;
 
     private AdapterSetting adapterSetting = new AdapterSetting(itemList);
 
-    public String versionName;
+    private boolean isCanceled = false;
+    private boolean isPaused = false;
 
+    public String versionName;
     public int versionCode;
+
+    String downloadUrl = "https://github.com/TwilightKHQ/MyPlayAndroid/releases/download/1.0/app-release.apk";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,6 +93,9 @@ public class ActivityMenu extends AppCompatActivity {
         recyclerView.setAdapter(adapterSetting);
         //设置RecyclerView的点击事件
         adapterSetting.setOnItemClickListener(new AdapterSetting.OnItemClickListener() {
+            String fileName = downloadUrl.substring(downloadUrl.lastIndexOf("/"));
+            String directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath();
+            File file = new File(directory + fileName);
             @Override
             public void onItemClick(View view, int position) {
                 switch (position){
@@ -101,12 +111,39 @@ public class ActivityMenu extends AppCompatActivity {
                         dialog.setPositiveButton("确认", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                DownloadUI(getString(R.string.download_apk));
+                                //判断文件是否下载完成
+                                ContextApplication.getContext().getMainLooper();
+                                new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        //需要在子线程中处理的逻辑
+                                        try {
+                                            long downloadedLength = file.length();
+                                            long contentLength = getContentLength(downloadUrl);
+                                            if ( downloadedLength == contentLength) {
+                                                handler.sendEmptyMessage(0x00);
+                                            } else {
+                                                handler.sendEmptyMessage(0x01);
+                                            }
+
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                }).start();
+
                             }
                         });
                         dialog.setNegativeButton("取消", null);
                         dialog.show();
                         break;
+                    case 3:
+                        //判断文件是否存在，存在则删除安装包
+                        if (file.exists()) {
+                            file.delete();
+                        } else {
+                            Toast.makeText(ContextApplication.getContext(), "安装包不存在", Toast.LENGTH_SHORT).show();
+                        }
                 }
             }
 
@@ -114,74 +151,98 @@ public class ActivityMenu extends AppCompatActivity {
             public void onItemLongClick(View view, int position) {
             }
         });
+
+        myDialog = new MyProgressBarDialog(this);
+        myDialog.getmCancelButton().setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                isCanceled = true;
+                cancelDownload(downloadUrl);
+                Toast.makeText(ContextApplication.getContext(), "已取消", Toast.LENGTH_SHORT).show();
+                if (myDialog.isShowing()){
+                    myDialog.dismiss();
+                }
+            }
+        });
+        myDialog.getmPausedButton().setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                isPaused = true;
+                pauseDownload();
+                Toast.makeText(ContextApplication.getContext(), "已暂停", Toast.LENGTH_SHORT).show();
+                myDialog.getmPausedButton().setText("继续");
+            }
+        });
     }
 
-    private void DownloadUI(final String downloadUrl) {
+    private void initItems() {
+        itemList.clear();
+        Item item0 = new Item("当前版本:  " + versionName, R.mipmap.information);
+        itemList.add(item0);
+        Item item1 = new Item("检查更新", R.mipmap.update);
+        itemList.add(item1);
+        Item item2 = new Item("下载安装包", R.mipmap.download);
+        itemList.add(item2);
+        Item item3 = new Item("删除安装包", R.mipmap.delete);
+        itemList.add(item3);
+    }
 
-        startDownload(downloadUrl);
+    private void initToolBar() {
 
-        progressDialog = new ProgressDialog(ActivityMenu.this);
-        progressDialog.setTitle("版本更新");
-        progressDialog.setMessage("正在下载最新安装包...");
-        progressDialog.setCancelable(false);
-        progressDialog.setCanceledOnTouchOutside(false);
-        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-        progressDialog.setMax(100);
-        progressDialog.setButton(DialogInterface.BUTTON_NEUTRAL, "取消", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                cancelDownload(downloadUrl);
-            }
-        });
-        progressDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "暂停", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                pauseDownload();
-            }
-        });
-        progressDialog.show();
+        Toolbar toolbar = (Toolbar) findViewById(R.id.menu_toolbar);
+
+        //导入Toolbar
+        toolbar.setTitle("");
+        setSupportActionBar(toolbar);
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
     }
 
     private DownloadListener listener = new DownloadListener() {
-        //用getNotification()构建用于显示下载进度的通知， notify()方法用于触发通知
+        //显示下载进度
         @Override
-        public void onProgress(int progress) {
-            progressDialog.setProgress(progress);
+        public void onProgress(final int progress) {
+            if (myDialog != null && myDialog.isShowing()) {
+                Log.d(TAG, "onProgress: " + progress);
+                myDialog.setmProgressBar(progress);
+                myDialog.setmProgressPercent(progress);
+            }
         }
 
         @Override
         public void onSuccess() {
             downloadTask = null;
-            //下载成功时将前台服务通知关闭，
-            Toast.makeText(ActivityMenu.this, "Download Success", Toast.LENGTH_SHORT).show();
-            progressDialog.cancel();
-            String downloadUrl = getString(R.string.download_apk);
-            String filename = downloadUrl.substring(downloadUrl.lastIndexOf("/"));
-            String directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + filename;
-            install(directory);
+            //下载完成后关闭Dialog
+            if (myDialog.isShowing()) {
+                myDialog.cancel();
+            }
+            install();
         }
 
         @Override
         public void onFailed() {
             downloadTask = null;
             //下载失败时将前台服务通知关闭，并创建一个下载失败的通知
-            Toast.makeText(ActivityMenu.this, "Download Failed", Toast.LENGTH_SHORT).show();
+            Toast.makeText(ActivityMenu.this, "下载失败", Toast.LENGTH_SHORT).show();
         }
 
         @Override
         public void onPaused() {
             downloadTask = null;
-            Toast.makeText(ActivityMenu.this, "Paused", Toast.LENGTH_SHORT).show();
         }
 
         @Override
         public void onCanceled() {
             downloadTask = null;
-            Toast.makeText(ActivityMenu.this, "Canceled", Toast.LENGTH_SHORT).show();
         }
     };
 
     private void startDownload(String downloadUrl) {
+        myDialog.show();
+        myDialog.setmProgressBar(0);
+        myDialog.setmProgressPercent(0);
         if (downloadTask == null) {
             downloadTask = new DownloadTask(listener);
             downloadTask.execute(downloadUrl);
@@ -213,29 +274,6 @@ public class ActivityMenu extends AppCompatActivity {
         }
     }
 
-    private void initItems() {
-        itemList.clear();
-        Item item0 = new Item("当前版本:  " + versionName, R.mipmap.information);
-        itemList.add(item0);
-        Item item1 = new Item("检查更新", R.mipmap.update);
-        itemList.add(item1);
-        Item item2= new Item("下载安装包", R.mipmap.download);
-        itemList.add(item2);
-    }
-
-    private void initToolBar() {
-
-        Toolbar toolbar = (Toolbar) findViewById(R.id.menu_toolbar);
-
-        //导入Toolbar
-        toolbar.setTitle("");
-        setSupportActionBar(toolbar);
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setDisplayHomeAsUpEnabled(true);
-        }
-    }
-
     //发送网络请求
     private void getUpdateInfo(String url) {
 
@@ -253,16 +291,12 @@ public class ActivityMenu extends AppCompatActivity {
                 Gson gson = new Gson();
                 UpdateBean updateBean = gson.fromJson(responseData, UpdateBean.class);
                 final int latestCode = updateBean.getVersionCode();
-                versionCode = Utils.getVersionCode(ContextApplication.getContext());
-                ShowCompare(latestCode);
+                versionCode = Utils.getVersionCode(getContext());
+                if (latestCode > versionCode){
+                    handler.sendEmptyMessage(0x100);
+                }
             }
         });
-    }
-
-    private void ShowCompare(final int Code) {
-        if (Code > versionCode){
-           handler.sendEmptyMessage(0x1);
-        }
     }
 
     //通过Handler来处理异步消息
@@ -270,14 +304,25 @@ public class ActivityMenu extends AppCompatActivity {
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what){
-                case 0x1:
-                    Toast.makeText(ContextApplication.getContext(), "检测到更新", Toast.LENGTH_SHORT).show();
+                case 0x00:
+                    Toast.makeText(ContextApplication.getContext(), "安装包已下载", Toast.LENGTH_SHORT).show();
+                    install();
+                    break;
+                case 0x01:
+                    startDownload(getString(R.string.download_apk));
+                    break;
+                case 0x100:
+                    Toast.makeText(getContext(), "检测到更新", Toast.LENGTH_SHORT).show();
+                    break;
+                default:
                     break;
             }
         }
     };
 
-    private void install(String filePath) {
+    private void install() {
+        String filename = downloadUrl.substring(downloadUrl.lastIndexOf("/"));
+        String filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + filename;
         Log.i(TAG, "开始执行安装: " + filePath);
         File apkFile = new File(filePath);
         Intent intent = new Intent(Intent.ACTION_VIEW);
@@ -286,7 +331,7 @@ public class ActivityMenu extends AppCompatActivity {
             Log.w(TAG, "版本大于 N ，开始使用 fileProvider 进行安装");
             intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             Uri contentUri = FileProvider.getUriForFile(
-                    ContextApplication.getContext()
+                    getContext()
                     , "com.example.myplayandroid.fileprovider"
                     , apkFile);
             intent.setDataAndType(contentUri, "application/vnd.android.package-archive");
@@ -295,6 +340,20 @@ public class ActivityMenu extends AppCompatActivity {
             intent.setDataAndType(Uri.fromFile(apkFile), "application/vnd.android.package-archive");
         }
         startActivity(intent);
+    }
+
+    private long getContentLength(String downloadUrl) throws IOException {
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder()
+                .url(downloadUrl)
+                .build();
+        Response response = client.newCall(request).execute();
+        if (response != null && response.isSuccessful()) {
+            long contentLength = response.body().contentLength();
+            response.close();
+            return contentLength;
+        }
+        return 0;
     }
 
 }

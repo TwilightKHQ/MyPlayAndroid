@@ -117,6 +117,7 @@ public class DownloadTask extends AsyncTask<String, Integer, Integer> {
         if (progress > lastProgress) {
             //更新下载进度
             listener.onProgress(progress);
+            Log.d("sm_bug", "progress："+progress);
             lastProgress = progress;
         }
     }
