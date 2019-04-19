@@ -233,6 +233,10 @@ public class FragmentHome extends Fragment implements SwipeRefreshLayout.OnRefre
             String author = datasBean.getAuthor();
             String category = datasBean.getSuperChapterName() + '/' + datasBean.getChapterName();
             String title = datasBean.getTitle();
+            title = title.replace("&mdash;", "—");
+            title = title.replace("&amp;", "&");
+            title = title.replace("&ldquo;", "“");
+            title = title.replace("&rdquo;", "”");
             String time = datasBean.getNiceDate();
             String url = datasBean.getLink();
             Message message = new Message(author, category, title, time, url);

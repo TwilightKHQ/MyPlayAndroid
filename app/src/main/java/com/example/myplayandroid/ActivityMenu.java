@@ -57,11 +57,11 @@ public class ActivityMenu extends AppCompatActivity {
 
     private AdapterSetting adapterSetting = new AdapterSetting(itemList);
 
-    private boolean isCanceled = false;
-    private boolean isPaused = false;
-
     public String versionName;
     public int versionCode;
+
+    private boolean isCanceled = false ;
+    private boolean isPaused = false ;
 
     String downloadUrl = "https://github.com/TwilightKHQ/MyPlayAndroid/releases/download/1.0/app-release.apk";
 
@@ -141,6 +141,7 @@ public class ActivityMenu extends AppCompatActivity {
                         //判断文件是否存在，存在则删除安装包
                         if (file.exists()) {
                             file.delete();
+                            Toast.makeText(ContextApplication.getContext(), "已删除安装包", Toast.LENGTH_SHORT).show();
                         } else {
                             Toast.makeText(ContextApplication.getContext(), "安装包不存在", Toast.LENGTH_SHORT).show();
                         }
@@ -167,10 +168,15 @@ public class ActivityMenu extends AppCompatActivity {
         myDialog.getmPausedButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                isPaused = true;
-                pauseDownload();
-                Toast.makeText(ContextApplication.getContext(), "已暂停", Toast.LENGTH_SHORT).show();
-                myDialog.getmPausedButton().setText("继续");
+                if (isPaused) {
+                    startDownload(downloadUrl);
+                    isPaused = false;
+                    myDialog.getmPausedButton().setText("暂停");
+                } else {
+                    pauseDownload();
+                    isPaused = true;
+                    myDialog.getmPausedButton().setText("继续");
+                }
             }
         });
     }
@@ -240,9 +246,6 @@ public class ActivityMenu extends AppCompatActivity {
     };
 
     private void startDownload(String downloadUrl) {
-        myDialog.show();
-        myDialog.setmProgressBar(0);
-        myDialog.setmProgressPercent(0);
         if (downloadTask == null) {
             downloadTask = new DownloadTask(listener);
             downloadTask.execute(downloadUrl);
@@ -309,6 +312,9 @@ public class ActivityMenu extends AppCompatActivity {
                     install();
                     break;
                 case 0x01:
+                    myDialog.show();
+                    myDialog.setmProgressBar(0);
+                    myDialog.setmProgressPercent(0);
                     startDownload(getString(R.string.download_apk));
                     break;
                 case 0x100:
